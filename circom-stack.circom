@@ -15,6 +15,7 @@ template StackEquality(height) {
     
     signal input current_state[height];
     signal input current_pointer;
+    signal input pushedElement;
 
     // constraints for pointer
     // 1. pointer must be incremented by 1 
@@ -40,9 +41,22 @@ template StackEquality(height) {
     // verify the equality and contraint it to 1 to ensure tt they are indeed equal.
     signal areAllPriorElementsEqual;
     areAllPriorElementsEqual <== IsEqual()([summation, old_pointer + 1]);
-    areAllPriorElementsEqual === 1s;    
+    areAllPriorElementsEqual === 1;    
     
+
+
     // 2. old pointer location was updated with value [use quinn selector: multiplexer]
+    signal latestElement;
+    latestElement <== Multiplexer(1, height)([current_inpstate, old_pointer]);
+    // ensure equal
+    IsBothLatestElementEqual <== IsEqual()([latestElement, pushedElement]);
 
-
+    // 3. check that the prior element at old_pointer was 0 before state change. 
+    // this is to ensure that state transition was done correctly.
+    signal priorTopmostElement;
+    priorTopmostElement <== Multiplexer(1, height)([previous_state, old_pointer]);
+    // ensure equal
+    IsPriorTopmostElementZero <== IsZero()(priorTopmostElement);
 }
+
+component main = StackEquality(10);
